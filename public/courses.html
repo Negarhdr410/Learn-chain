@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>دوره‌ها</title>
+  <link rel="icon" type="image/png" href="/Icon.png">
+  <style>
+    body {
+      font-family: Tahoma, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+      direction: rtl;
+      background: linear-gradient(to bottom, #ffffff , #4FC3F7);
+      background-repeat: no-repeat;
+      background-attachment: fixed
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .courses-container {
+      max-width: 900px;
+      margin: 20px auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .course-card {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
+      transition: box-shadow 0.3s ease;
+    }
+    .course-card:hover {
+      box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
+    }
+    .course-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #222;
+    }
+    .course-desc {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 12px;
+      min-height: 60px;
+    }
+    .course-info p {
+      margin: 4px 0;
+      font-size: 13px;
+      color: #666;
+    }
+    .course-link a {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background 0.3s ease;
+    }
+    .course-link a:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>دوره‌های آموزشی</h1>
+  <div class="courses-container" id="courses-container"></div>
+  <script>
+    const container = document.getElementById("courses-container");
+
+    // اگر میخوای از داده ثابت استفاده کنی، از این داده استفاده کن:
+    // const courses = [... داده JSON که دادی ...];
+
+    async function fetchCourses() {
+      try {
+        const res = await fetch("http://localhost:4000/v1/courses");
+        if (!res.ok) throw new Error("خطا در دریافت دوره‌ها");
+    console.log(res);
+
+        const courses = await res.json();
+        renderCourses(courses);
+      } catch (error) {
+        container.innerHTML = `<p style="color:red;">${error.message}</p>`;
+      }
+    }
+
+    function renderCourses(courses) {
+      container.innerHTML = "";
+      courses.forEach(course => {
+        const priceWithDiscount = course.price - (course.price * (course.discount / 100));
+        const statusText = {
+          "تکمیل شده": "تکمیل شده",
+          "پیش فروش": "پیش فروش",
+          "در حال برگزاری": "در حال برگزاری"
+        }[course.status] || course.status;
+        console.log(course.href);
+        const card = document.createElement("div");
+        card.className = "course-card";
+
+        card.innerHTML = `
+          <div class="course-title">${course.name}</div>
+          <div class="course-desc">${course.description}</div>
+          <div class="course-info">
+            <p>وضعیت: <strong>${statusText}</strong></p>
+            <p>قیمت: ${priceWithDiscount.toLocaleString()} تومان</p>
+          </div>
+          <div class="course-link">
+          
+            <a href="/courses/${course.href}">مشاهده دوره</a>
+          </div>
+        `;
+
+        
+
+
+
+        container.appendChild(card);
+      });
+    }
+
+    fetchCourses();
+  </script>
+</body>
+</html>

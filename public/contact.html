@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>فرم تماس با ما</title>
+  <link rel="icon" type="image/png" href="/Icon.png">
+  <style>
+    body {
+      font-family: sans-serif;
+      background: linear-gradient(to bottom, #ffffff , #4FC3F7);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+
+      display: flex;
+      justify-content: center; /* وسط افقی کل کانتینر */
+      align-items: center;     /* وسط عمودی کل کانتینر */
+      min-height: 100vh;
+      margin: 0; /* حذف padding-top */
+    }
+
+  .container {
+    max-width: 400px;
+    width: 100%;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* وسط چین عمودی محتوا داخل کانتینر */
+    align-items: center;     /* وسط چین افقی محتوا داخل کانتینر */
+  }
+
+  h2 {
+    text-align: center;
+  }
+
+  input, textarea, button {
+    width: 90%;              /* کمی از کانتینر فاصله بگیرد */
+    padding: 10px;
+    margin: 8px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;      /* وسط چین متن داخل input و textarea */
+    box-sizing: border-box;  /* برای جلوگیری از بزرگ شدن بیش از حد */
+  }
+
+  button {
+    background: #0056b3;
+    color: white;
+    cursor: pointer;
+    border: none;
+  }
+
+  button:hover {
+    background: #003f7f;
+  }
+
+  .success, .error {
+    text-align: center;      /* وسط چین پیام‌ها */
+    margin-top: 10px;
+  }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>تماس با ما</h2>
+  <form id="contactForm">
+    <input type="text" name="name" placeholder="نام" required>
+    <input type="email" name="email" placeholder="ایمیل" required>
+    <input type="text" name="phone" placeholder="شماره تلفن" required>
+    <textarea name="body" rows="5" placeholder="پیام شما..." required></textarea>
+    <button type="submit">ارسال</button>
+  </form>
+  <div id="message"></div>
+</div>
+
+<script>
+  document.getElementById("contactForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const name = e.target.name.value.trim();
+    const email = e.target.email.value.trim();
+    const phone = e.target.phone.value.trim();
+    const body = e.target.body.value.trim();
+
+    try {
+      const res = await fetch("http://localhost:4000/v1/contacts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name, email, phone, body })
+      });
+
+      if (res.ok) {
+        document.getElementById("message").innerHTML = '<p class="success">پیام شما با موفقیت ارسال شد ✅</p>';
+        e.target.reset();
+      } else {
+        document.getElementById("message").innerHTML = '<p class="error">ارسال پیام با مشکل مواجه شد ❌</p>';
+      }
+    } catch (error) {
+      document.getElementById("message").innerHTML = '<p class="error">ارتباط با سرور برقرار نشد ❌</p>';
+    }
+  });
+</script>
+
+</body>
+</html>

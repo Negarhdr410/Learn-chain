@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <title>مقالات</title>
+  <link rel="icon" type="image/png" href="/Icon.png">
+  <style>
+    body {
+      font-family: Tahoma, sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+      direction: rtl;
+      margin: 0;
+      background: linear-gradient(to bottom, #ffffff , #4FC3F7);
+      background-repeat: no-repeat;
+      background-attachment: fixed
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: #222;
+    }
+    .articles-container {
+      max-width: 900px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+    }
+    .article-card {
+      background: white;
+      padding: 16px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 0.3s ease;
+    }
+    .article-card:hover {
+      box-shadow: 0 4px 14px rgb(0 0 0 / 0.2);
+    }
+    .article-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #111;
+    }
+    .article-description {
+      font-size: 14px;
+      color: #555;
+      flex-grow: 1;
+      margin-bottom: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .article-link {
+      align-self: flex-start;
+      text-decoration: none;
+      color: #2563eb;
+      font-weight: 600;
+      font-size: 14px;
+      transition: color 0.3s ease;
+    }
+    .article-link:hover {
+      color: #1d4ed8;
+    }
+    .loading {
+      text-align: center;
+      color: #777;
+      margin-top: 40px;
+      font-size: 16px;
+    }
+    .error {
+      text-align: center;
+      color: #ef4444;
+      margin-top: 40px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>لیست مقالات</h1>
+  <div id="articles" class="articles-container">
+    <div class="loading">در حال بارگذاری مقالات...</div>
+  </div>
+
+  <script>
+    const container = document.getElementById("articles");
+
+    fetch("http://localhost:4000/v1/articles")
+      .then(response => {
+        if (!response.ok) throw new Error("خطا در دریافت مقالات");
+        return response.json();
+      })
+      .then(data => {
+        if (!Array.isArray(data) || data.length === 0) {
+          container.innerHTML = "<p class='loading'>مقاله‌ای یافت نشد.</p>";
+          return;
+        }
+        container.innerHTML = ""; // خالی کردن متن بارگذاری
+        data.forEach(article => {
+          const div = document.createElement("div");
+          div.className = "article-card";
+          div.innerHTML = `
+            <div class="article-title">${article.title || article.name || "بدون عنوان"}</div>
+            <div class="article-description">${article.description || article.summary || "بدون توضیح"}</div>
+            <div class="article-creator">نویسنده:${article.creator.name || "بدون نویسنده"}</div>
+            <a href="/articles/${article.href}" class="article-link" target="_blank" rel="noopener noreferrer">مشاهده مقاله</a>
+          `;
+          container.appendChild(div);
+        });
+      })
+      .catch(err => {
+        container.innerHTML = `<p class="error">${err.message}</p>`;
+        console.error(err);
+      });
+  </script>
+</body>
+</html>

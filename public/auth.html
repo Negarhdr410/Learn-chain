@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>ورود / ثبت‌نام</title>
+  <link rel="icon" type="image/png" href="/Icon.png">
+  <style>
+    body {
+      font-family: sans-serif;
+      background: linear-gradient(to bottom, #ffffff , #4FC3F7);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+
+      display: flex;
+      justify-content: center; /* افقی وسط */
+      align-items: center;     /* عمودی وسط */
+      min-height: 100vh;
+      margin: 0; /* حذف padding-top */
+    }
+
+    .container {
+      background: #fff;
+      padding: 20px 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      width: 300px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    input {
+      margin-bottom: 12px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .switch {
+      text-align: center;
+      margin-top: 15px;
+      cursor: pointer;
+      color: #007bff;
+    }
+
+    .switch:hover {
+      text-decoration: underline;
+    }
+
+    .message {
+      text-align: center;
+      margin-top: 10px;
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="login-container">
+    <h2>ورود</h2>
+    <form id="login-form">
+      <input type="text" name="identifier" placeholder="ایمیل یا شماره تلفن" required />
+      <input type="password" name="password" placeholder="رمز عبور" required />
+      <button type="submit">ورود</button>
+    </form>
+    <div class="message" id="login-message"></div>
+    <div class="switch" onclick="showRegister()">ثبت‌نام ندارید؟ ثبت‌نام کنید</div>
+  </div>
+
+  <div class="container" id="register-container" style="display:none;">
+    <h2>ثبت‌نام</h2>
+    <form id="register-form">
+      <input type="text" name="name" placeholder="نام" required />
+      <input type="text" name="username" placeholder="نام کاربری" required />
+      <input type="email" name="email" placeholder="ایمیل" required />
+      <input type="text" name="phone" placeholder="شماره تلفن" required />
+      <input type="password" name="password" placeholder="رمز عبور" required />
+      <input type="password" name="confirmPassword" placeholder="تأیید رمز عبور" required />
+      <button type="submit">ثبت‌نام</button>
+    </form>
+    <div class="message" id="register-message"></div>
+    <div class="switch" onclick="showLogin()">قبلاً ثبت‌نام کردید؟ وارد شوید</div>
+  </div>
+
+  <script>
+    const loginContainer = document.getElementById('login-container');
+    const registerContainer = document.getElementById('register-container');
+
+    function showRegister() {
+      loginContainer.style.display = 'none';
+      registerContainer.style.display = 'block';
+    }
+
+    function showLogin() {
+      registerContainer.style.display = 'none';
+      loginContainer.style.display = 'block';
+    }
+
+    function goToCourses() {
+      window.location.href = "home.html";
+    }
+
+    // ==== فرم ورود ====
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const identifier = form.identifier.value;
+      const password = form.password.value;
+      const msg = document.getElementById('login-message');
+
+      try {
+        const res = await fetch('http://localhost:4000/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          msg.textContent = 'ورود موفق!';
+          msg.classList.remove('error');
+          window.location.href = "home.html";
+        } else {
+          let errorText = 'ورود ناموفق!';
+          if (Array.isArray(data) && data.length && data[0].message) {
+            errorText = data[0].message;
+          } else if (data.message) {
+            errorText = data.message;
+          } else if (data.error) {
+            errorText = data.error;
+          } else if (typeof data === 'string') {
+            errorText = data;
+          }
+          msg.textContent = errorText;
+          msg.classList.add('error');
+        }
+      } catch (err) {
+        msg.textContent = err.message || 'خطا در اتصال به سرور';
+        msg.classList.add('error');
+      }
+    });
+
+    // ==== فرم ثبت‌نام ====
+    // فرم ثبت‌نام
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const msg = document.getElementById('register-message');
+
+  const body = {
+    name: form.name.value,
+    username: form.username.value,
+    email: form.email.value,
+    phone: form.phone.value,
+    password: form.password.value,
+    confirmPassword: form.confirmPassword.value
+  };
+
+  try {
+    const res = await fetch('http://localhost:4000/v1/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      msg.textContent = 'ثبت‌نام موفق!';
+      msg.classList.remove('error');
+      window.location.href = "home.html";
+    } else {
+      // نمایش کامل JSON خطا در صورت فرمت غیرمنتظره
+      let errorText = 'ثبت نام ناموفق!';
+      if (Array.isArray(data) && data.length) {
+        errorText = data.map(d => d.message || d.msg || JSON.stringify(d)).join('\n');
+      } else if (data.message) {
+        errorText = data.message;
+      } else if (data.error) {
+        errorText = data.error;
+      } else if (data.errors && Array.isArray(data.errors)) {
+        errorText = data.errors.map(d => d.msg || JSON.stringify(d)).join('\n');
+      } else {
+        // اگر هیچکدام نبود، کل JSON را نشان بده
+        errorText = JSON.stringify(data);
+      }
+
+      msg.textContent = errorText;
+      msg.classList.add('error');
+    }
+  } catch (err) {
+    msg.textContent = err.message || 'خطا در اتصال به سرور';
+    msg.classList.add('error');
+  }
+});
+
+  </script>
+
+</body>
+</html>

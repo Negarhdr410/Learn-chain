@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>article-detail</title>
+  <link rel="icon" type="image/png" href="/Icon.png">
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+      direction: rtl;
+      background: linear-gradient(to bottom, #ffffff , #4FC3F7);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0; 
+    }
+    .container {
+      max-width: 450px;
+      min-width: 400px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      padding: 10px;
+      border: 2px solid #007bff;
+      border-radius: 8px;
+      color: #007bff;
+      font-size: 22px;
+      background: #f9fbff;
+    }
+    img {
+      display: block;
+      margin: 0 auto 20px auto;
+      max-width: 100%;
+      border-radius: 10px;
+    }
+    p {
+      line-height: 1.8;
+      text-align: justify;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1 id="article-title">در حال بارگذاری...</h1>
+    <div style="width: 100%; display: flex; justify-content: center;">
+      <img id="article-cover" src="" alt="تصویر مقاله">
+    </div>
+    <p id="article-body">در حال دریافت متن مقاله...</p>
+    <p id="article-author"></p>
+    <p id="article-createdAt"></p>
+  </div>
+
+  <script>
+    // گرفتن slug از URL
+    const pathParts = window.location.pathname.split("/").filter(Boolean);
+    const href = pathParts[pathParts.length - 1]; 
+
+    console.log("href:", href);
+
+    // درخواست به API
+    fetch(`http://localhost:4000/v1/articles/${href}`)
+      .then(res => {
+        if (!res.ok) throw new Error("مقاله پیدا نشد");
+        return res.json();
+      })
+      .then(article => {
+        console.log("API Response:", article);
+
+        document.getElementById("article-title").textContent = article.title;
+        document.getElementById("article-cover").src = `/courses/covers/${article.cover}`;
+        document.getElementById("article-body").textContent = article.body;
+        document.getElementById("article-author").textContent =
+          "✍️ نویسنده: " + (article.creator?.name || article.creator?.username || "نامشخص");
+        document.getElementById("article-createdAt").textContent =
+          "📅 تاریخ انتشار: " + new Date(article.createdAt).toLocaleDateString("fa-IR");
+      })
+      .catch(err => {
+        console.error("خطا در گرفتن اطلاعات:", err);
+        document.getElementById("article-title").textContent = "⚠️ خطا در دریافت مقاله";
+      });
+  </script>
+</body>
+</html>

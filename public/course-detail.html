@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <title>جزئیات دوره</title>
+  <link rel="icon" type="image/png" href="/Icon.png">
+  <style>
+    body {
+      font-family: "Vazir", sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+      direction: rtl;
+      background: linear-gradient(to bottom, #ffffff , #4FC3F7);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      display: flex;
+      justify-content: center; /* افقی وسط */
+      align-items: center;     /* عمودی وسط */
+      min-height: 100vh;
+      margin: 0; /* حذف padding-top */
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      padding: 10px;
+      border: 2px solid #007bff;
+      border-radius: 8px;
+      color: #007bff;
+      font-size: 22px;
+      background: #f9fbff;
+    }
+
+    img {
+      display: block;
+      margin: 0 auto 20px auto;
+      max-width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+
+    p {
+      line-height: 1.8;
+      font-size: 16px;
+      margin: 12px 0;
+      color: #333;
+    }
+
+    p span {
+      font-weight: bold;
+      color: #555;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1 id="course-title">در حال بارگذاری...</h1>
+    <img id="course-cover" src="" alt="تصویر دوره">
+    <p id="course-description"></p>
+    <p id="course-price"></p>
+    <p id="course-status"></p>
+  </div>
+
+  <script>
+    // گرفتن slug (مثلا "python") از URL
+    const pathParts = window.location.pathname.split("/").filter(Boolean);
+    const href = pathParts[pathParts.length - 1]; 
+
+    console.log("href:", href);
+
+    // درخواست اطلاعات دوره از API
+    fetch(`http://localhost:4000/v1/courses/${href}`)
+      .then(res => {
+        if (!res.ok) throw new Error("دوره پیدا نشد");
+        return res.json();
+      })
+      .then(data => {
+        console.log(data);
+        document.getElementById("course-title").textContent = data['course'].name;
+        document.getElementById("course-cover").src = `/courses/covers/${data['course'].cover}`;
+        document.getElementById("course-description").innerHTML = `<span>توضیحات:</span> ${data['course'].description}`;
+        document.getElementById("course-price").innerHTML = `<span>قیمت:</span> ${data['course'].price} تومان`;
+        document.getElementById("course-status").innerHTML = `<span>وضعیت:</span> ${data['course'].status}`;
+      })
+      .catch(err => {
+        console.error("خطا در گرفتن اطلاعات:", err);
+        document.getElementById("course-title").textContent = "خطا در دریافت اطلاعات دوره";
+      });
+  </script>
+</body>
+</html>

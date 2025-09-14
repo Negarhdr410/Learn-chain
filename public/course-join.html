@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ثبت‌نام در دوره</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --accent: #2563eb;
+      --muted: #6b7280;
+      --success: #16a34a;
+      --danger: #ef4444;
+    }
+    body {
+      font-family: Tahoma, Arial, sans-serif;
+      background: var(--bg);
+      margin: 0;
+      padding: 30px;
+      direction: rtl;
+    }
+    .wrap {
+      max-width: 480px;
+      margin: 30px auto;
+    }
+    .card {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(16,24,40,0.06);
+    }
+    h1 { margin: 0 0 12px 0; font-size: 20px; color:#111827;}
+    p.subtitle { margin:0 0 18px 0; color:var(--muted); font-size:14px }
+    label { display:block; font-size:13px; margin-bottom:6px; color:#374151 }
+    input, button, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #e6e9ee;
+      outline: none;
+      font-size:14px;
+    }
+    textarea { min-height:90px; resize:vertical; }
+    .row { display:flex; gap:12px; }
+    .row .col { flex:1; }
+    .actions { margin-top:14px; display:flex; gap:10px; align-items:center; }
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      cursor: pointer;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+    button[disabled] { opacity: 0.6; cursor: not-allowed; }
+    .msg { font-size:13px; margin-top:10px; }
+    .msg.success { color: var(--success); }
+    .msg.error { color: var(--danger); }
+    .small { color: var(--muted); font-size:13px; margin-top:10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>ثبت‌نام در دوره</h1>
+      <p class="subtitle">فرم زیر را تکمیل کنید تا ثبت‌نام شما در دوره انجام شود.</p>
+
+      <div id="course-info" class="small">در حال دریافت اطلاعات دوره...</div>
+
+      <form id="register-form" onsubmit="return false;">
+        <label>نام و نام خانوادگی</label>
+        <input id="name" type="text" placeholder="مثلاً نگار حیدری" required />
+
+        <label>ایمیل</label>
+        <input id="email" type="email" placeholder="example@mail.com" required />
+
+        <div class="row" style="margin-top:8px;">
+          <div class="col">
+            <label>تلفن (اختیاری)</label>
+            <input id="phone" type="tel" placeholder="09xxxxxxxx" />
+          </div>
+          <div class="col">
+            <label>کد تخفیف (اختیاری)</label>
+            <input id="coupon" type="text" placeholder="COUPON" />
+          </div>
+        </div>
+
+        <label style="margin-top:10px;">توضیحات (اختیاری)</label>
+        <textarea id="note" placeholder="پیام یا توضیحات شما"></textarea>
+
+        <div class="actions">
+          <button id="submit-btn" type="submit">ثبت‌نام</button>
+          <div id="spinner" style="display:none;">در حال ارسال...</div>
+        </div>
+
+        <div id="message" class="msg" role="status" aria-live="polite"></div>
+      </form>
+
+      <div class="small" style="margin-top:14px;">
+        توجه: این فرم از API <code>/v1/courses/:id/register</code> استفاده می‌کند. اگر API در آدرس دیگری است یا نیاز به فیلدهای دیگر دارد، به من بگو تا هماهنگش کنم.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const idParamName = 'id'; // اگر پارامتر متفاوته این رو عوض کن (مثلاً 'href')
+      const apiBase = '/v1/courses'; // پایه API - در صورت نیاز آدرس کامل بگذار مثل http://localhost:4000/v1/courses
+
+      const params = new URLSearchParams(window.location.search);
+      const courseId = params.get(idParamName);
+
+      const courseInfoEl = document.getElementById('course-info');
+      const msgEl = document.getElementById('message');
+      const submitBtn = document.getElementById('submit-btn');
+      const spinner = document.getElementById('spinner');
+
+      // ابتدا تلاش کنیم اطلاعات دوره (مختصر) رو بگیریم تا نام/قیمت نمایش بدیم (اختیاری)
+      if (!courseId) {
+        courseInfoEl.textContent = 'آیدی دوره در آدرس پیدا نشد. لینک صفحه باید شامل ?id=COURSE_ID باشد.';
+      } else {
+        fetch(`${apiBase}/${encodeURIComponent(courseId)}`)
+          .then(res => {
+            if (!res.ok) throw new Error('دوره پیدا نشد');
+            return res.json();
+          })
+          .then(course => {
+            // اگر پاسخ API ساختار متفاوتی داره اینجا باید تنظیم بشه
+            courseInfoEl.textContent = `در حال ثبت‌نام در: ${course.name || course.title || course.href || courseId}`;
+          })
+          .catch(err => {
+            console.error(err);
+            courseInfoEl.textContent = 'خطا در دریافت اطلاعات دوره.';
+          });
+      }
+
+      // ارسال فرم
+      document.getElementById('register-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        msgEl.textContent = ''; msgEl.className = 'msg';
+
+        if (!courseId) {
+          msgEl.textContent = 'آیدی دوره موجود نیست.';
+          msgEl.classList.add('error');
+          return;
+        }
+
+        const payload = {
+          name: document.getElementById('name').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+          note: document.getElementById('note').value.trim(),
+          coupon: document.getElementById('coupon').value.trim()
+        };
+
+        // پایه اعتبارسنجی ساده
+        if (!payload.name || !payload.email) {
+          msgEl.textContent = 'لطفاً نام و ایمیل را وارد کنید.';
+          msgEl.classList.add('error');
+          return;
+        }
+
+        submitBtn.disabled = true;
+        spinner.style.display = 'block';
+
+        try {
+          const res = await fetch(`${apiBase}/${encodeURIComponent(courseId)}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          const text = await res.text(); // ممکنه API json یا متن برگردونه
+          let data;
+          try { data = JSON.parse(text); } catch { data = text; }
+
+          if (!res.ok) {
+            const errMsg = (data && data.message) ? data.message : (typeof data === 'string' ? data : `خطا: ${res.status}`);
+            throw new Error(errMsg);
+          }
+
+          // موفق
+          msgEl.textContent = (data && data.message) ? data.message : 'ثبت‌نام با موفقیت انجام شد.';
+          msgEl.classList.add('success');
+          // در صورت نیاز می‌تونیم فرم رو ریست کنیم:
+          // document.getElementById('register-form').reset();
+        } catch (err) {
+          console.error(err);
+          msgEl.textContent = err.message || 'خطا در ثبت‌نام.';
+          msgEl.classList.add('error');
+        } finally {
+          submitBtn.disabled = false;
+          spinner.style.display = 'none';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
